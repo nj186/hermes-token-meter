@@ -18,7 +18,7 @@ import { atom, host, Tip, useValue } from '@hermes/plugin-sdk'
 import { useEffect } from 'react'
 import { jsx, jsxs } from 'react/jsx-runtime'
 
-const ID = 'usage-hud'
+const ID = 'token-meter'
 
 // ── 模块级状态 ──────────────────────────────────────────────────────────────
 let ctxRef = null
