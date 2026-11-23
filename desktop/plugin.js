@@ -1,6 +1,6 @@
 /**
  * Usage HUD — a live token/cost readout for the Hermes Desktop status bar.
- *   装到：<hermes home>/desktop-plugins/usage-hud/plugin.js
+ *   装到：<hermes home>/desktop-plugins/token-meter/plugin.js
  *
  * 显示什么：
  *   11 轮 153 步 · 53 token/s · 总计 2.4M · 输入 238K 输出 4K · 缓存 90% · 上下文 24%（圆环）
