@@ -1,4 +1,4 @@
-# 用量仪表条（Usage HUD）— Hermes 桌面插件
+# 用量仪表条（Token Meter）— Hermes 桌面插件
 
 给你的 Hermes 桌面版底栏加一条实时用量仪表：**轮数步数、输出速度、token 总计、缓存命中率、上下文占用圆环**，鼠标悬停还能看到十几项细节。
 
@@ -27,13 +27,13 @@ Hermes 桌面版默认底栏不显示任何用量。你花了多少 token、缓�
 1. 把 `desktop/plugin.js` 复制到：
 
    ```
-   %LOCALAPPDATA%\hermes\desktop-plugins\usage-hud\plugin.js
+   %LOCALAPPDATA%\hermes\desktop-plugins\token-meter\plugin.js
    ```
 
    （`%LOCALAPPDATA%` 一般是 `C:\Users\你的用户名\AppData\Local`。
-   如果你用命名 profile，路径是 `%LOCALAPPDATA%\hermes\profiles\<profile名>\desktop-plugins\usage-hud\plugin.js`）
+   如果你用命名 profile，路径是 `%LOCALAPPDATA%\hermes\profiles\<profile名>\desktop-plugins\token-meter\plugin.js`）
 
-2. **文件夹名必须叫 `usage-hud`**，跟插件 id 一致，否则加载不了
+2. **文件夹名必须叫 `token-meter`**，跟插件 id 一致，否则加载不了
 
 3. 桌面版里按 `Ctrl+K`（Mac 是 `Cmd+K`），搜「重新加载桌面插件」
 
@@ -91,7 +91,7 @@ Hermes 桌面版默认底栏不显示任何用量。你花了多少 token、缓�
 ## 注意
 
 1. **只读，不写任何东西。** 它只从后台读数据，不改配置、不碰密钥、不发网络请求。
-2. **会往插件数据目录写两个诊断文件**（`last-readout.json`、`usage-keys.json`），方便你排查「为什么不显示」。位置是 `%APPDATA%\Hermes\plugin-files\data\usage-hud\`。不想要可以删掉 `writeDiag()` 的调用。
+2. **会往插件数据目录写两个诊断文件**（`last-readout.json`、`usage-keys.json`），方便你排查「为什么不显示」。位置是 `%APPDATA%\Hermes\plugin-files\data\token-meter\`。不想要可以删掉 `writeDiag()` 的调用。
 3. **轮数/步数靠数会话记录。** 所以切到很早的老会话时，要等它数完才显示数字，中间会短暂显示 `—`。
 4. **`--ui-*` 这类变量名是 Hermes 内部实现。** 上游改版可能改名，届时对应那条美化会失效（不会报错，只是不好看），跟着改一下变量名即可。
 5. **需要 Hermes 桌面版。** CLI 和纯网关没有状态栏，装了看不到东西。
