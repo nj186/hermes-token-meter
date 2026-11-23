@@ -3,7 +3,7 @@ setlocal
 title usage-hud - install
 
 set "SRC=%~dp0desktop\plugin.js"
-set "DST=%LOCALAPPDATA%\hermes\desktop-plugins\usage-hud"
+set "DST=%LOCALAPPDATA%\hermes\desktop-plugins\token-meter"
 
 if not exist "%SRC%" (
   echo [ERROR] desktop\plugin.js not found next to this script.
