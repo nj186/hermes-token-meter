@@ -20,6 +20,78 @@ import { jsx, jsxs } from 'react/jsx-runtime'
 
 const ID = 'token-meter'
 
+// ── 文案（英文优先；桌面端会按界面语言挑，没装的语言回落英文）────────────
+const STRINGS = {
+  en: {
+    turns: (r, s) => `${r} turns ${s} steps`,
+    cache: p => `cache ${p}%`,
+    cacheNone: 'cache —',
+    total: 'Total',
+    input: 'Input',
+    output: 'Output',
+    context: 'Context',
+    tip: {
+      model: m => `Model: ${m}`,
+      turns: (r, s) => `Turns / steps: ${r} turns, ${s} steps`,
+      speed: tps => `Output speed: ${tps} token/s (average of the last ~10 requests)`,
+      speedNone: 'Output speed: no request finished yet',
+      latency: s => `Average per request: ${s} s (includes time to first token)`,
+      latencyNone: 'Average per request: not measured yet',
+      out: n => `This session, generated: ${n} token`,
+      inp: n => `This session, input (cache misses): ${n} token`,
+      cacheRead: n => `This session, cache reads (reused history, billed at cache rate): ${n} token`,
+      total: n => `This session, total (in + out + cache reads): ${n} token — large because every request resends the whole context`,
+      cacheHit: p => `Cache hit: ${p}% (higher is cheaper and faster)`,
+      cacheNone: 'Cache hit: not reported yet',
+      ctx: (p, used, max) => `Context used: ${p}% (${used} / ${max})`,
+      ctxNone: 'Context used: not measured yet',
+      reasoning: n => `Reasoning token: ${n}`,
+      subagents: n => `Subagents running: ${n}`,
+      compressions: n => `Context compressions: ${n}`,
+    },
+  },
+  zh: {
+    turns: (r, s) => `${r} 轮 ${s} 步`,
+    cache: p => `缓存 ${p}%`,
+    cacheNone: '缓存 —',
+    total: '总计',
+    input: '输入',
+    output: '输出',
+    context: '上下文',
+    tip: {
+      model: m => `模型：${m}`,
+      turns: (r, s) => `轮数/步数：${r} 轮 ${s} 步`,
+      speed: tps => `输出速度：${tps} token/s（最近十来次请求的平均）`,
+      speedNone: '输出速度：还没跑完一次请求',
+      latency: s => `平均一次请求：${s} 秒（含等首字的时间）`,
+      latencyNone: '平均一次请求：还没测出来',
+      out: n => `本会话输出（生成）：${n} token`,
+      inp: n => `本会话输入（未命中缓存的部分）：${n} token`,
+      cacheRead: n => `本会话缓存读（复用的历史，按缓存价计费）：${n} token`,
+      total: n => `本会话合计（入 + 出 + 缓存读）：${n} token —— 数字大是因为每次请求都要重发整段上下文`,
+      cacheHit: p => `缓存命中：${p}%（越高越省钱、越快）`,
+      cacheNone: '缓存命中：这次还没报上来',
+      ctx: (p, used, max) => `上下文占用：${p}%（${used} / ${max}）`,
+      ctxNone: '上下文占用：还没测出来',
+      reasoning: n => `其中思考 token：${n}`,
+      subagents: n => `正在跑的子代理：${n} 个`,
+      compressions: n => `上下文压缩过：${n} 次`,
+    },
+  },
+}
+
+// 当前语言的文案；拿不到就用英文
+let L = STRINGS.en
+function pickStrings() {
+  try {
+    const loc = String(document.documentElement.lang || navigator.language || 'en').toLowerCase()
+    L = loc.startsWith('zh') ? STRINGS.zh : STRINGS.en
+  } catch (_) {
+    L = STRINGS.en
+  }
+}
+pickStrings()
+
 // ── 模块级状态 ──────────────────────────────────────────────────────────────
 let ctxRef = null
 let hostRef = null
@@ -202,9 +274,9 @@ function Hud() {
   const rounds = counts.forSession === sessionId ? counts.rounds : null
   const steps = counts.forSession === sessionId ? counts.steps : null
 
-  const stepText = rounds === null || steps === null ? '—' : `${rounds} 轮 ${steps} 步`
+  const stepText = rounds === null || steps === null ? '—' : L.turns(rounds, steps)
   const tpsText = tps > 0 ? `${Math.round(tps)} token/s` : '—'
-  const cacheText = typeof cache === 'number' && Number.isFinite(cache) ? `缓存 ${Math.round(cache)}%` : '缓存 —'
+  const cacheText = typeof cache === 'number' && Number.isFinite(cache) ? L.cache(Math.round(cache)) : L.cacheNone
   const ctxText = ctxMax > 0 ? `${Math.round(ctxPct)}%` : `${fmtTokens(total)} token`
 
   const model = usage?.model ? String(usage.model) : ''
@@ -213,21 +285,21 @@ function Hud() {
   const reasoningTok = Number(usage?.reasoning ?? 0)
 
   const tipParts = [
-    model ? `模型：${model}` : null,
-    `轮数/步数：${stepText}`,
-    `输出速度：${tps > 0 ? Math.round(tps) + ' token/s（最近十来次请求的平均）' : '还没跑完一次请求'}`,
-    `平均一次请求：${latency > 0 ? latency.toFixed(1) + ' 秒（含等首字的时间）' : '还没测出来'}`,
-    `本会话输出（生成）：${outputTok.toLocaleString('en-US')} token`,
-    `本会话输入（未命中缓存的部分）：${inputTok.toLocaleString('en-US')} token`,
-    `本会话缓存读（复用的历史，按缓存价计费）：${cacheTok.toLocaleString('en-US')} token`,
-    `本会话合计（入 + 出 + 缓存读）：${total.toLocaleString('en-US')} token —— 数字大是因为每次请求都要重发整段上下文`,
-    typeof cache === 'number' ? `缓存命中：${Math.round(cache)}%（越高越省钱、越快）` : '缓存命中：这次还没报上来',
+    model ? L.tip.model(model) : null,
+    rounds !== null ? L.tip.turns(rounds, steps) : null,
+    tps > 0 ? L.tip.speed(Math.round(tps)) : L.tip.speedNone,
+    latency > 0 ? L.tip.latency(latency.toFixed(1)) : L.tip.latencyNone,
+    L.tip.out(outputTok.toLocaleString('en-US')),
+    L.tip.inp(inputTok.toLocaleString('en-US')),
+    L.tip.cacheRead(cacheTok.toLocaleString('en-US')),
+    L.tip.total(total.toLocaleString('en-US')),
+    typeof cache === 'number' && Number.isFinite(cache) ? L.tip.cacheHit(Math.round(cache)) : L.tip.cacheNone,
     ctxMax > 0
-      ? `上下文占用：${Math.round(ctxPct)}%（${fmtTokens(usage?.context_used ?? 0)} / ${fmtTokens(ctxMax)}）`
-      : '上下文占用：还没测出来',
-    reasoningTok > 0 ? `其中思考 token：${reasoningTok.toLocaleString('en-US')}` : null,
-    subagents > 0 ? `正在跑的子代理：${subagents} 个` : null,
-    compressions > 0 ? `上下文压缩过：${compressions} 次` : null
+      ? L.tip.ctx(Math.round(ctxPct), fmtTokens(usage?.context_used ?? 0), fmtTokens(ctxMax))
+      : L.tip.ctxNone,
+    reasoningTok > 0 ? L.tip.reasoning(reasoningTok.toLocaleString('en-US')) : null,
+    subagents > 0 ? L.tip.subagents(subagents) : null,
+    compressions > 0 ? L.tip.compressions(compressions) : null
   ].filter(x => x !== null)
 
   return jsx(Tip, {
@@ -243,7 +315,7 @@ function Hud() {
         jsxs('span', {
           className: 'inline-flex items-center gap-1 whitespace-nowrap',
           children: [
-            jsx('span', { className: 'text-(--ui-text-quaternary)', children: '总计' }),
+            jsx('span', { className: 'text-(--ui-text-quaternary)', children: L.total }),
             jsx('span', { className: 'text-foreground/90', children: fmtTokens(total) })
           ]
         }),
@@ -251,9 +323,9 @@ function Hud() {
         jsxs('span', {
                   className: 'inline-flex items-center gap-1 whitespace-nowrap',
                   children: [
-                    jsx('span', { className: 'text-(--ui-text-quaternary)', children: '输入' }),
+                    jsx('span', { className: 'text-(--ui-text-quaternary)', children: L.input }),
                     jsx('span', { className: 'text-foreground/90', children: fmtTokens(inputTok) }),
-                    jsx('span', { className: 'text-(--ui-text-quaternary)', children: '输出' }),
+                    jsx('span', { className: 'text-(--ui-text-quaternary)', children: L.output }),
                     jsx('span', { className: 'text-foreground/90', children: fmtTokens(outputTok) }),
                     jsx('span', { className: 'text-(--ui-text-quaternary)', children: '·' }),
                     jsx('span', { className: 'text-(--ui-text-quaternary)', children: cacheText })
@@ -264,7 +336,7 @@ function Hud() {
           className: 'inline-flex items-center gap-1 whitespace-nowrap',
           children: [
             ctxMax > 0 ? jsx(Ring, { pct: ctxPct }) : null,
-            jsx('span', { className: 'text-(--ui-text-quaternary)', children: '上下文' }),
+            jsx('span', { className: 'text-(--ui-text-quaternary)', children: L.context }),
             jsx('span', { className: 'text-foreground/90', children: ctxText })
           ]
         })
