@@ -1,0 +1,10 @@
+name: usage-hud
+version: 1.0.0
+description: "Live token and cost readout in the Hermes Desktop status bar: turns/steps, output speed, cumulative total, input/output split, cache hit rate and a context-occupancy ring — plus a 13-line tooltip with model, latency, reasoning tokens, subagent count and compression count. Pure desktop plugin, no build step, no network, no credentials."
+author: "usage-hud contributors"
+homepage: "https://github.com/"
+kind: standalone
+requires_hermes: ">=0.20.0"
+provides_tools: []
+provides_hooks: []
+requires_env: []
